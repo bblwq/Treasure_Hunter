@@ -1,4 +1,4 @@
-# Treasure_Hunter
+# Treasure Hunter
 A web game developed in vanilla JS
 
 ## Game Instructions:
