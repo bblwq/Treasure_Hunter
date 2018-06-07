@@ -1,0 +1,127 @@
+body{
+  background: #faf8ef;
+  margin: 0px auto;
+  color: #776e65;
+  font-family: Arial;
+  text-align: center;
+}
+
+h1{
+  font-weight: bold;
+  font-size: 40px;
+  text-align: center;
+}
+
+.setup{
+  font-size: 25px;
+  display: inline;
+  margin-left: 30px;
+  background-color: #8f7a66;
+  color: #ffffff;
+  border-width: 2px;
+  width: 80px;
+  height: 35px;
+}
+
+.start{
+  font-size: 25px;
+  display: inline;
+  margin-left: 30px;
+  background-color: #8f7a66;
+  color: #ffffff;
+  border-width: 2px;
+  width: 80px;
+  height: 35px;
+}
+
+.end{
+  font-size: 25px;
+  display: inline;
+  margin-left: 30px;
+  background-color: #8f7a66;
+  color: #ffffff;
+  border-width: 2px;
+  width: 80px;
+  height: 35px;
+}
+
+.rounds {
+  font-weight: bold;
+  font-size: 25px;
+  text-align: right;
+  display: inline;
+  visibility: hidden;
+  margin-left: 30px;
+}
+
+.score {
+  font-weight: bold;
+  font-size: 25px;
+  text-align: right;
+  display: inline;
+  visibility: hidden;
+  margin-left: 30px;
+}
+
+.grid {
+  background-color: #bbada0;
+  text-align: center;
+  border-spacing: 6px;
+  margin: 0px auto;
+  margin-top: 20px;
+}
+
+.normal {
+  width: 60px;
+  height: 60px;
+  background-color: #CEC8AA;
+  text-align: center;
+  border: 1px solid transparent;
+  font-size: 30px;
+  color: #FFFF00;
+  font-weight: bold;
+}
+
+.treasure {
+  width: 60px;
+  height: 60px;
+  background-color: #CEC8AA;
+  text-align: center;
+  border: 1px solid transparent;
+  font-size: 35px;
+  color: #FFFF00;
+  font-weight: bold;
+}
+
+.obstacle {
+  width: 60px;
+  height: 60px;
+  background-color: #CEC8AA;
+  text-align: center;
+  border: 1px solid transparent;
+  font-size: 35px;
+  color: #000000;
+  font-weight: bold;
+}
+
+.robot {
+  width: 60px;
+  height: 60px;
+  background-color: #CEC8AA;
+  text-align: center;
+  border: 1px solid transparent;
+  font-size: 35px;
+  color: #ff0000;
+  font-weight: normal;
+}
+
+.hero{
+  width: 60px;
+  height: 60px;
+  background-color: #CEC8AA;
+  text-align: center;
+  border: 1px solid transparent;
+  font-size: 35px;
+  color: #0000ff;
+  font-weight: bold;
+}

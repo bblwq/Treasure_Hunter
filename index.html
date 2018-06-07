@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Treasure Hunt Game</title>
+<meta charset="UTF-8">
+<meta name="author" content="Weiqi Liu">
+<meta name="copyright" content="University of Liverpool">
+<meta name="keywords" content="game,treasure,hero,robots,rounds,turn">
+<meta name="description" content="Assignment 3 of COMP284">
+<link rel="stylesheet" type="text/css" href="style.css" />
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-93511998-1"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'UA-93511998-1');
+</script>
+<script type="text/javascript">
+//  The main function to start the game.
+function main() {
+    this.gridSize = [9, 9]    //  The grid size is 10*10 which can be changed easily.
+	this.hero = "<img src='hero.png' alt='hero' width='42px' height='42px' />"
+	this.robot = "<img src='robot.png' alt='robot' width='42px' height='42px' />"
+	this.treasure = "<img src='treasure.png' alt='treasure' width='42px' height='42px' />"
+	this.obstacle = "<img src='obstacle.png' alt='obstacle' width='42px' height='42px' />"
+    Grid(gridSize)
+    setGame()    //  The game always start in the setup stage.
+}
+
+// Generate the grid.
+function Grid(gridSize) {
+    document.writeln("<table class='grid' id='grid'>")
+    for(i=0; i<=gridSize[0]; i++) {
+        document.writeln("<tr>")
+        for(j=0; j<=gridSize[1]; j++)
+	        document.writeln("<td id=" + [i, j] + " class='normal' onClick='clickCell(" + [i, j] + ")'></td>")
+	    document.writeln("</tr>")
+    }
+    document.writeln("</table>")
+}
+
+//  The setup stage.
+function setGame() {
+    alert("Set Up Your Objects!\nPlace a treasure:        1 - 9\nPlace an obstacle:     o\nPlace a hero:              h\nPlace a killer robot:    k")
+    this.rounds = 0    //  Number of rounds played so far.
+    this.score = 0    //  User's score.
+    this.focusId = "NA"    //  The coordinate of the cell that a user clicked.
+    this.heroId = "NA"    //  The coordinate of hero.
+    this.treasureId = new Array()  //  A list of coordinates and values of treasures.
+    this.obstacleId = new Array()  //  A list of coordinates of obstacles.
+    this.robotId = new Array()    //  A list of coordinates of killer robots.
+    this.stage = 0    //  Setup stage: 0; Play stage: 1; End stage: 2.
+	this.movable = 0    //  The number of hero and robots who cannot move.
+    document.getElementById("setup").disabled = true
+    document.getElementById("start").disabled = false
+	document.getElementById("end").disabled = true
+    document.getElementById("rounds").style.visibility = "hidden"
+    document.getElementById("score").style.visibility = "hidden"
+    for(i=0; i<=gridSize[0]; i++) {    //  Clean the grid.
+        for(j=0; j<=gridSize[1]; j++)
+	        document.getElementById([i, j]).innerHTML = ""
+    }
+}
+
+//  Attempt to go to play stage.
+function startGame() {
+    if(heroId == "NA")    //  Attempt to go to the play stage without placing a hero.
+        alert("Warning: You need to place a hero to start the game!")
+    else if(remainTreasure() == 0) {    //  There are not treasures on the grid.
+        alert("Warning: You does not place any treasures!")
+        endGame()
+    }
+    else {    //  Go to the play stage successfully.
+        alert("Game Start!\nMove left:        a\nMove right:     d\nMove up:        w\nMove down:    x")
+        document.getElementById("setup").disabled = true
+		document.getElementById("start").disabled = true
+        document.getElementById("end").disabled = false
+        document.getElementById("rounds").style.visibility = "visible"
+        document.getElementById("score").style.visibility = "visible"
+	    document.getElementById("rounds").innerHTML = "Rounds: 0"
+	    document.getElementById("score").innerHTML = "Score: 0"
+	    stage = 1
+		if(heroStuck() == 4)    //  The hero is not able to move.
+			robotMove()
+		else    //  The hero is able to move.
+			movable++
+    }
+}
+
+//  The end stage.
+function endGame() {
+    alert("Game Over!")
+    stage = 2
+    document.getElementById("setup").disabled = false
+    document.getElementById("start").disabled = true
+    document.getElementById("end").disabled = true
+    if(heroId == "NA")    //  The computer wins if the hero is dead.
+        alert("Computer Wins!!!")
+    else    //  The user wins if the hero is still alive.
+        alert("User Wins!")
+    //  The outcome of the game cannot be draw because the hero must be either alive or dead.
+}
+
+//  Calculate the number of cells that the hero cannot move to.
+function heroStuck() {
+	n = 0
+	for(i=0; i<obstacleId.length; i++) {
+		if(heroId[0]+1==obstacleId[i][0] && heroId[1]==obstacleId[i][1])
+			n++
+		if(heroId[0]-1==obstacleId[i][0] && heroId[1]==obstacleId[i][1])
+			n++
+		if(heroId[0]==obstacleId[i][0] && heroId[1]+1==obstacleId[i][1])
+			n++
+		if(heroId[0]==obstacleId[i][0] && heroId[1]-1==obstacleId[i][1])
+			n++
+	}
+	if(heroId[0]+1 > gridSize[0])
+		n++
+	if(heroId[0]-1 < 0)
+		n++
+	if(heroId[1]+1 > gridSize[1])
+		n++
+	if(heroId[1]-1 < 0)
+		n++
+	return n
+}
+
+// Click on a cell.
+function clickCell(x, y) {
+    if(stage == 0) {    //  The cell is only clickable at the setup stage.
+        if(focusId != "NA")
+            document.getElementById(focusId).style.border = "1px solid transparent"
+        if(document.getElementById([x, y]).innerHTML == "") {
+            document.getElementById([x, y]).style.border = "1px solid black"
+            focusId = [x, y]
+        }
+        else {    //  An object has been placed on the cell.
+            alert("Warning: You have already placed an object on this cell!")
+            focusId = "NA"
+        }
+    }
+}
+
+//  Press a key.
+function processKey(key) {
+    key = key || window.event
+    if(stage == 0)    //  Press a key at the setup stage.
+        place(key.keyCode)
+    if(stage == 1)    //  Press a key at the play stage.
+        beforeMove(key.keyCode)
+}
+
+//  Attempt to place an object.
+function place(code) {
+    if(focusId != "NA") {  // The user has clicked a cell.
+        switch(code) {
+            case 49:    //  Place a treasure with value 1.
+				document.getElementById(focusId).className = "treasure"
+				document.getElementById(focusId).innerHTML = "1"
+				treasureId.push([focusId[0], focusId[1], 1])
+				break
+			case 50:    //  Place a treasure with value 2.
+				document.getElementById(focusId).className = "treasure"
+				document.getElementById(focusId).innerHTML = "2"
+				treasureId.push([focusId[0], focusId[1], 2])
+				break
+			case 51:    //  Place a treasure with value 3.
+				document.getElementById(focusId).className = "treasure"
+				document.getElementById(focusId).innerHTML = "3"
+				treasureId.push([focusId[0], focusId[1], 3])
+				break
+			case 52:    //  Place a treasure with value 4.
+				document.getElementById(focusId).className = "treasure"
+				document.getElementById(focusId).innerHTML = "4"
+				treasureId.push([focusId[0], focusId[1], 4])
+				break
+			case 53:    //  Place a treasure with value 5.
+				document.getElementById(focusId).className = "treasure"
+				document.getElementById(focusId).innerHTML = "5"
+				treasureId.push([focusId[0], focusId[1], 5])
+				break
+			case 54:    //  Place a treasure with value 6.
+				document.getElementById(focusId).className = "treasure"
+				document.getElementById(focusId).innerHTML = "6"
+				treasureId.push([focusId[0], focusId[1], 6])
+				break
+			case 55:    //  Place a treasure with value 7.
+				document.getElementById(focusId).className = "treasure"
+				document.getElementById(focusId).innerHTML = "7"
+				treasureId.push([focusId[0], focusId[1], 7])
+				break
+			case 56:    //  Place a treasure with value 8.
+				document.getElementById(focusId).className = "treasure"
+				document.getElementById(focusId).innerHTML = "8"
+				treasureId.push([focusId[0], focusId[1], 8])
+				break
+			case 57:    //  Place a treasure with value 9.
+				document.getElementById(focusId).className = "treasure"
+				document.getElementById(focusId).innerHTML = "9"
+				treasureId.push([focusId[0], focusId[1], 9])
+				break
+			case 79:    //  Place an obstacle.
+				document.getElementById(focusId).className = "obstacle"
+				document.getElementById(focusId).innerHTML = obstacle
+				obstacleId.push(focusId)
+				break
+			case 72:    //  Place a hero.
+				if(heroId == "NA") {    //  No hero has been placed.
+					heroId = focusId
+					document.getElementById(focusId).className = "hero"
+					document.getElementById(focusId).innerHTML = hero
+				}
+				else    //  A hero has been placed.
+					alert("Warning: You have already placed a hero!")
+				break
+			case 75:    //  Place a killer robot.
+				document.getElementById(focusId).className = "robot"
+				document.getElementById(focusId).innerHTML = robot
+				robotId.push(focusId)
+				break
+			default:    //  Fail to place an object if invalid key is pressed.
+				alert("Warning: Invalid character of object!")
+				break
+		}
+		document.getElementById(focusId).style.border = "1px solid transparent"
+		focusId = "NA"
+    }
+}
+
+//  Attempt to move the hero.
+function beforeMove(code) {
+	var target
+	switch(code) {
+		case 87:    //  Move the hero up.
+			target = [heroId[0]-1, heroId[1]]
+			break
+		case 88:    //  Move the hero down.
+			target = [heroId[0]+1, heroId[1]]
+			break
+		case 65:    //  Move the hero left.
+			target = [heroId[0], heroId[1]-1]
+			break
+		case 68:    //  Move the hero right.
+			target = [heroId[0], heroId[1]+1]
+			break
+		default:
+			alert("Warning: Invalid character of movement!")
+			break
+	}
+	if(target[0]<0 || target[0]>gridSize[0] || target[1]<0 || target[1]>gridSize[1]) {    // The hero is moving outside of the grid.
+		alert("Warning: You are moving outside of the grid!")
+		robotMove()
+	}
+	else if(document.getElementById(target).className == "obstacle") {    // The hero is moving to a cell occupied by an obstacle.
+		alert("Warning: There is an obstacle!")
+		robotMove()
+	}
+	else {    //  The attempted move is successful and the hero changes cells.
+		document.getElementById(heroId).innerHTML = ""
+		document.getElementById(heroId).className = "normal"
+		heroId = target
+		afterMove()
+	}
+}
+
+//  The hero has changed its cell.
+function afterMove() {
+	if(document.getElementById(heroId).className == "robot") {    // The hero meet a robot.
+		alert("Warning: You meet a killer robot!")
+		document.getElementById(heroId).innerHTML = robot
+		document.getElementById(heroId).className = "robot"
+		heroId = "NA"
+		endGame()
+	}
+	else if(document.getElementById(heroId).className == "treasure") {    // The hero meet a treasure.
+	    score += collectTreasure()
+		document.getElementById("score").innerHTML = "Score: " + score
+		document.getElementById(heroId).innerHTML = hero
+		document.getElementById(heroId).className = "hero"
+		if(remainTreasure() == 0) {    //  There are no treasures left on the grid.
+			alert("Warning: There no treasure left on the grid!")
+			endGame()
+		}
+		else
+			robotMove()
+	}
+	else {    // The hero meet nothing.
+		document.getElementById(heroId).innerHTML = hero
+		document.getElementById(heroId).className = "hero"
+		robotMove()
+	}
+}
+
+//  Check the value of the treasure and remove it from the grid.
+function collectTreasure() {
+	var value = 0
+	for(t=0; t<treasureId.length; t++) {
+		if(heroId[0]==treasureId[t][0] && heroId[1]==treasureId[t][1]) {
+			value = treasureId[t][2]
+			treasureId[t][2] = 0    //  The treasure is removed.
+		}
+	}
+	return value
+}
+
+//  Calculate the number of treasures left on the grid.
+function remainTreasure() {
+	remain = 0
+	for(i=0; i<treasureId.length; i++) {
+		if(treasureId[i][2] != 0)
+			remain++
+	}
+	return remain
+}
+
+//  Computer's turn.
+function robotMove() {
+	robotOrder()
+	for (r=0; r<robotId.length; r++) {
+		resultAround = checkAround([robotId[r][0], robotId[r][1]])
+		if(resultAround[0] == "hero") {    //  The hero is in a cell immediately surrounding a killer robot.
+            //  The killer robots move to the cell occupied by the hero.		
+			document.getElementById(robotId[r]).innerHTML = ""
+			document.getElementById(robotId[r]).className = "normal"
+			robotId[r] = heroId
+			document.getElementById(robotId[r]).innerHTML = robot
+			document.getElementById(robotId[r]).className = "robot"
+			heroId = "NA"    //  The hero dies.
+			addRound()
+			alert("Your hero dies!")
+			endGame()
+			return
+		}
+		else if (resultAround[0] == "treasure") {    //  The hero is in a cell immediately surrounding a treasure.
+			//  The killer robot moves to the cell which contains a treasure.
+			document.getElementById(robotId[r]).innerHTML = ""
+			document.getElementById(robotId[r]).className = "normal"
+			robotId[r] = [treasureId[resultAround[1]][0], treasureId[resultAround[1]][1]]
+			document.getElementById(robotId[r]).innerHTML = robot
+			document.getElementById(robotId[r]).className = "robot"
+			movable++
+			treasureId[resultAround[1]][2] = 0    //  The treasure on this cell is removed.
+			if(remainTreasure() == 0) {
+			    addRound()
+				alert("There no treasure left on the grid!")
+				endGame()
+				return
+			}
+		}
+		else {    //  None of the surrounding cells contains the hero nor a treasure.
+			indexC = nextCell(robotId[r])
+			for(i=0; i<indexC.length; i++) {
+				if(indexC[i][0]<0 || indexC[i][0]>gridSize[0])    //  The target cell is off the grid.
+					continue
+				else if(indexC[i][1]<0 || indexC[i][1]>gridSize[1])    //  The target cell is off the grid.
+					continue
+				else if(document.getElementById([indexC[i][0], indexC[i][1]]).className == "robot")    //  The target cell is occupied by another killer robot.
+					continue
+				else if(document.getElementById([indexC[i][0], indexC[i][1]]).className == "obstacle")    //  The target cell is occupied by an obstacle.
+					continue
+				else {
+					document.getElementById(robotId[r]).innerHTML = ""
+					document.getElementById(robotId[r]).className = "normal"
+					robotId[r] = [indexC[i][0], indexC[i][1]]
+					document.getElementById(robotId[r]).innerHTML = robot
+					document.getElementById(robotId[r]).className = "robot"
+					movable++
+					break
+				}
+			}
+		}
+	}
+	if(movable == 0) {    //  All killer robots is not able to move.
+		alert("Your hero and all robots are not able to move")
+		endGame()
+	}
+	if(stage == 1)    //  The number of rounds is increased by one if the game continues after computer's turn.
+		addRound()
+}
+
+//  Move each of the killer robots in descending order of distances between them and the hero.
+function robotOrder() {
+	for(r=0; r<robotId.length; r++)
+		robotId[r][2] = Math.pow(robotId[r][1]-heroId[1], 2) + Math.pow(robotId[r][0]-heroId[0], 2)
+	robotId.sort(sortNumber)
+	for(r=0; r<robotId.length; r++)
+		robotId[r].pop()
+}
+
+//  Check surrounding cells for the killer robot.
+function checkAround(pos) {
+	if(Math.abs(pos[0]-heroId[0])<=1 && Math.abs(pos[1]-heroId[1])<=1)
+		return ["hero"]
+	for(t=0; t<treasureId.length; t++) {
+		if(Math.abs(treasureId[t][0]-pos[0])<=1 && Math.abs(treasureId[t][1]-pos[1])<=1 && treasureId[t][2] != 0)
+			return ["treasure", t]
+	}
+	return ["Nothing"]
+}
+
+//  Generate a list of target cells in descending order of distances between them and the hero.
+function nextCell(pos) {
+	var candidates = new Array()
+	candidates.push([pos[0]-1, pos[1]-1, 0])
+	candidates.push([pos[0]-1, pos[1], 0])
+	candidates.push([pos[0]-1, pos[1]+1, 0])
+	candidates.push([pos[0]+1, pos[1]-1, 0])
+	candidates.push([pos[0]+1, pos[1], 0])
+	candidates.push([pos[0]+1, pos[1]+1, 0])
+	candidates.push([pos[0], pos[1]-1, 0])
+	candidates.push([pos[0], pos[1]+1, 0])
+	for(c=0; c<candidates.length; c++)
+		candidates[c][2] = Math.pow(candidates[c][1]-heroId[1], 2) + Math.pow(candidates[c][0]-heroId[0], 2)
+	return candidates.sort(sortNumber)
+}
+
+// Sort by the third element of the array.
+function sortNumber(a, b) {
+  return a[2]-b[2]
+}
+
+//  Increase the number of rounds played by one.
+function addRound() {
+	rounds++
+	document.getElementById("rounds").innerHTML = "Rounds: " + rounds
+}
+(function(i,s,o,g,r,a,m){
+	i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();
+	a=s.createElement(o),m=s.getElementsByTagName(o)[0];
+	a.async=1;
+	a.src=g;
+	m.parentNode.insertBefore(a,m)
+})
+(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+ga('create', 'UA-93511998-1', 'auto');
+ga('send', 'pageview');
+</script>
+</head>
+
+<body onKeyDown="processKey(event)">
+  <h1 id = "title">Treasure Hunter</h1>
+  <input id="setup" class="setup" type="button" value="Setup" onClick="setGame()" />
+  <input id="start" class="start" type="button" value="Start" onClick="startGame()" />
+  <input id="end" class="end" type="button" value="End" onClick="endGame()" />
+  <div id="rounds" class="rounds">Rounds: 0</div>
+  <div id="score" class="score">Score: 0</div>
+<script type="text/javascript">
+main()
+</script>
+<noscript>JavaScript not supported or enabled</noscript>
+</body>
+</html>
